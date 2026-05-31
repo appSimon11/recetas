@@ -5,13 +5,12 @@ const path = require("path");
 const mysql = require("mysql2/promise");
 
 async function migrate() {
-  const configuredDatabaseUrl = process.env.DATABASE_URL || process.env.MYSQL_URL;
+  const possibleDatabaseUrls = [process.env.DATABASE_URL, process.env.MYSQL_URL].filter(Boolean);
+  const configuredDatabaseUrl = possibleDatabaseUrls.find((value) => (
+    value.startsWith("mysql://") || value.startsWith("mysql2://")
+  ));
 
   if (!configuredDatabaseUrl) {
-    throw new Error("Falta DATABASE_URL o MYSQL_URL. No se puede ejecutar la migracion.");
-  }
-
-  if (!configuredDatabaseUrl.startsWith("mysql://") && !configuredDatabaseUrl.startsWith("mysql2://")) {
     throw new Error("DATABASE_URL o MYSQL_URL debe ser una URL completa de MySQL, por ejemplo ${{ MySQL.MYSQL_URL }} en Railway.");
   }
 
