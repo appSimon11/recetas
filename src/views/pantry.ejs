@@ -39,6 +39,12 @@
             <h3>Falta</h3>
             <p><%= recipe.missing.join(", ") || "Nada" %></p>
           </div>
+          <% if (recipe.optional && recipe.optional.length) { %>
+            <div>
+              <h3>Opcional</h3>
+              <p><%= recipe.optional.join(", ") %></p>
+            </div>
+          <% } %>
         </div>
       </div>
     </article>

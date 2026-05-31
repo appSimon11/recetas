@@ -28,6 +28,17 @@ function normalizeIngredientName(value) {
     .trim();
 }
 
+function ingredientMatches(pantryItem, ingredient) {
+  if (pantryItem === ingredient) {
+    return true;
+  }
+
+  const pantryWords = pantryItem.split(" ").filter(Boolean);
+  const ingredientWords = ingredient.split(" ").filter(Boolean);
+
+  return pantryWords.some((word) => ingredientWords.includes(word));
+}
+
 function parseIngredients(value) {
   if (Array.isArray(value)) {
     return value.map((item) => ({
@@ -337,12 +348,13 @@ async function recommendByIngredients(rawIngredients) {
     recipes.map(async (recipe) => {
       const fullRecipe = await getRecipe(recipe.id);
       const ingredients = fullRecipe.ingredients.filter((item) => !item.is_optional);
+      const optional = fullRecipe.ingredients.filter((item) => item.is_optional);
       const hits = [];
       const missing = [];
 
       for (const ingredient of ingredients) {
         const normalized = normalizeIngredientName(ingredient.name);
-        const matched = pantry.some((item) => normalized.includes(item) || item.includes(normalized));
+        const matched = pantry.some((item) => ingredientMatches(item, normalized));
 
         if (matched) {
           hits.push(ingredient.name);
@@ -359,6 +371,7 @@ async function recommendByIngredients(rawIngredients) {
         ...recipe,
         hits,
         missing,
+        optional: optional.map((item) => item.name),
         score,
         convenience
       };
