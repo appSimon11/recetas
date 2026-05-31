@@ -1,0 +1,28 @@
+<article class="recommendation">
+  <img src="/recetas/<%= recipe.id %>/imagen" alt="<%= recipe.title %>">
+  <div>
+    <div class="score-row">
+      <div class="score">
+        <strong><%= recipe.score %>%</strong>
+        <span><%= recipe.convenience %></span>
+      </div>
+      <% if (showEatButton && recipe.score === 100) { %>
+        <form method="post" action="/despensa/recetas/<%= recipe.id %>/comer">
+          <button class="button primary" type="submit">Me la como!</button>
+        </form>
+      <% } %>
+    </div>
+    <h2><a href="/recetas/<%= recipe.id %>"><%= recipe.title %></a></h2>
+    <p><%= recipe.subtitle || recipe.ingredient_summary || '' %></p>
+    <div class="match-columns">
+      <div>
+        <h3>Tienes</h3>
+        <p><%= recipe.hits.join(", ") || "-" %></p>
+      </div>
+      <div>
+        <h3>Falta</h3>
+        <p><%= recipe.missing.join(", ") || "Nada" %></p>
+      </div>
+    </div>
+  </div>
+</article>

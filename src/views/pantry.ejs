@@ -2,53 +2,94 @@
 
 <section class="page-title">
   <div>
-    <p class="eyebrow">Despensa inteligente</p>
-    <h1>Que cocinar con lo que tienes</h1>
+    <p class="eyebrow">Despensa</p>
+    <h1>Lo que tienes y lo que puedes cocinar</h1>
   </div>
   <a class="button" href="/recetas/nueva">Nueva receta</a>
 </section>
 
-<form class="pantry-form" method="get" action="/despensa">
-  <label>
-    Ingredientes disponibles
-    <textarea name="ingredientes" rows="5" placeholder="pollo, arroz, crema, champiñones, limon"><%= ingredients %></textarea>
-  </label>
-  <button class="button primary" type="submit">Encontrar recetas</button>
-</form>
-
-<section class="recommendations">
-  <% if (ingredients && !recommendations.length) { %>
-    <div class="empty">No encontre recetas con esos ingredientes todavia.</div>
-  <% } %>
-  <% recommendations.forEach((recipe) => { %>
-    <article class="recommendation">
-      <img src="/recetas/<%= recipe.id %>/imagen" alt="<%= recipe.title %>">
+<section class="pantry-layout">
+  <article class="pantry-panel">
+    <div class="section-head compact">
       <div>
-        <div class="score">
-          <strong><%= recipe.score %>%</strong>
-          <span><%= recipe.convenience %></span>
-        </div>
-        <h2><a href="/recetas/<%= recipe.id %>"><%= recipe.title %></a></h2>
-        <p><%= recipe.subtitle || recipe.ingredient_summary || '' %></p>
-        <div class="match-columns">
-          <div>
-            <h3>Tienes</h3>
-            <p><%= recipe.hits.join(", ") || "-" %></p>
-          </div>
-          <div>
-            <h3>Falta</h3>
-            <p><%= recipe.missing.join(", ") || "Nada" %></p>
-          </div>
-          <% if (recipe.optional && recipe.optional.length) { %>
-            <div>
-              <h3>Opcional</h3>
-              <p><%= recipe.optional.join(", ") %></p>
-            </div>
-          <% } %>
-        </div>
+        <p class="eyebrow">Inventario</p>
+        <h2>Tu despensa</h2>
       </div>
-    </article>
-  <% }) %>
+    </div>
+
+    <form class="pantry-form flat" method="post" action="/despensa">
+      <label>
+        Agregar ingredientes
+        <span class="field-help">Uno por renglon: ingrediente, cantidad, unidad</span>
+        <textarea name="items" rows="5" placeholder="pollo, 2, piezas&#10;arroz, 1, taza&#10;limon, 3, piezas"></textarea>
+      </label>
+      <button class="button primary" type="submit">Guardar en despensa</button>
+    </form>
+
+    <div class="pantry-list">
+      <% if (!pantryItems.length) { %>
+        <div class="empty">Todavia no hay ingredientes guardados.</div>
+      <% } %>
+      <% pantryItems.forEach((item) => { %>
+        <div class="pantry-item">
+          <div>
+            <strong><%= item.name %></strong>
+            <span><%= [item.quantity, item.unit].filter(Boolean).join(" ") || "Sin cantidad" %></span>
+          </div>
+          <form method="post" action="/despensa/<%= item.id %>/eliminar">
+            <button class="button small" type="submit">Quitar</button>
+          </form>
+        </div>
+      <% }) %>
+    </div>
+  </article>
+
+  <article class="pantry-panel">
+    <div class="section-head compact">
+      <div>
+        <p class="eyebrow">Con tu despensa</p>
+        <h2>Que puedes hacer</h2>
+      </div>
+    </div>
+
+    <section class="recommendations compact-list">
+      <% if (pantryItems.length && !pantryRecommendations.length) { %>
+        <div class="empty">No encontre recetas con tu despensa todavia.</div>
+      <% } %>
+      <% if (!pantryItems.length) { %>
+        <div class="empty">Agrega ingredientes para recibir recomendaciones.</div>
+      <% } %>
+      <% pantryRecommendations.forEach((recipe) => { %>
+        <%- include("partials/recommendation-card", { recipe, showEatButton: true }) %>
+      <% }) %>
+    </section>
+  </article>
+</section>
+
+<section class="manual-pantry">
+  <div class="section-head">
+    <div>
+      <p class="eyebrow">Idea rapida</p>
+      <h2>Buscar con ingredientes escritos</h2>
+    </div>
+  </div>
+
+  <form class="pantry-form" method="get" action="/despensa">
+    <label>
+      Ingredientes disponibles
+      <textarea name="ingredientes" rows="5" placeholder="pollo, arroz, crema, champiñones, limon"><%= ingredients %></textarea>
+    </label>
+    <button class="button primary" type="submit">Encontrar recetas</button>
+  </form>
+
+  <section class="recommendations">
+    <% if (ingredients && !recommendations.length) { %>
+      <div class="empty">No encontre recetas con esos ingredientes todavia.</div>
+    <% } %>
+    <% recommendations.forEach((recipe) => { %>
+      <%- include("partials/recommendation-card", { recipe, showEatButton: false }) %>
+    <% }) %>
+  </section>
 </section>
 
 <%- include("partials/page-end") %>

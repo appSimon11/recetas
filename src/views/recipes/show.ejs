@@ -33,7 +33,7 @@
         <% recipe.ingredients.forEach((ingredient) => { %>
           <li>
             <strong><%= ingredient.name %></strong>
-            <span><%= [ingredient.quantity, ingredient.unit].filter(Boolean).join(" ") %><%= ingredient.is_optional ? " · opcional" : "" %></span>
+            <span><%= [ingredient.quantity, ingredient.unit].filter(Boolean).join(" ") %></span>
           </li>
         <% }) %>
       </ul>

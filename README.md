@@ -10,6 +10,7 @@ Recetario visual para guardar comidas con foto, ingredientes, preparacion y busq
 - Busqueda por nombre, ingrediente, cocina, categoria o etiqueta.
 - Vista de receta con foto, ingredientes y pasos.
 - Despensa inteligente: escribe ingredientes disponibles y la app recomienda recetas por porcentaje de coincidencia.
+- Despensa guardada: registra lo que tienes, recibe recomendaciones y descuenta ingredientes cuando cocinas.
 - Edicion y eliminacion de recetas.
 - Lista para Railway + MySQL.
 
@@ -18,15 +19,15 @@ Recetario visual para guardar comidas con foto, ingredientes, preparacion y busq
 En el formulario, cada ingrediente va en un renglon:
 
 ```text
-ingrediente | cantidad | unidad | seccion | opcional
+ingrediente, cantidad, unidad
 ```
 
 Ejemplo:
 
 ```text
-pollo | 2 | piezas | proteina
-arroz | 1 | taza | base
-limon | 1 | pieza | final | opcional
+pollo, 2, piezas
+arroz, 1, taza
+limon, 1, pieza
 ```
 
 ## Configuracion local

@@ -45,20 +45,20 @@ function parseIngredients(value) {
       name: cleanText(item.name),
       quantity: cleanText(item.quantity),
       unit: cleanText(item.unit),
-      section: cleanText(item.section),
-      is_optional: Boolean(item.is_optional)
+      section: "",
+      is_optional: false
     })).filter((item) => item.name);
   }
 
   return String(value || "")
     .split(/\r?\n/)
-    .map((line) => line.split("|").map(cleanText))
+    .map((line) => line.includes("|") ? line.split("|").map(cleanText) : line.split(",").map(cleanText))
     .map((parts) => ({
       name: parts[0],
       quantity: parts[1] || "",
       unit: parts[2] || "",
-      section: parts[3] || "",
-      is_optional: ["si", "true", "opcional"].includes((parts[4] || "").toLowerCase())
+      section: "",
+      is_optional: false
     }))
     .filter((item) => item.name);
 }
@@ -237,7 +237,7 @@ async function getRecipe(id) {
   recipe.ingredients = ingredients;
   recipe.tags = tags.map((item) => item.tag);
   recipe.ingredients_text = ingredients
-    .map((item) => [item.name, item.quantity, item.unit, item.section, item.is_optional ? "opcional" : ""].join(" | "))
+    .map((item) => [item.name, item.quantity, item.unit].filter(Boolean).join(" | "))
     .join("\n");
   recipe.tags_text = recipe.tags.join(", ");
 
@@ -347,8 +347,7 @@ async function recommendByIngredients(rawIngredients) {
   const enriched = await Promise.all(
     recipes.map(async (recipe) => {
       const fullRecipe = await getRecipe(recipe.id);
-      const ingredients = fullRecipe.ingredients.filter((item) => !item.is_optional);
-      const optional = fullRecipe.ingredients.filter((item) => item.is_optional);
+      const ingredients = fullRecipe.ingredients;
       const hits = [];
       const missing = [];
 
@@ -371,7 +370,6 @@ async function recommendByIngredients(rawIngredients) {
         ...recipe,
         hits,
         missing,
-        optional: optional.map((item) => item.name),
         score,
         convenience
       };
@@ -384,12 +382,91 @@ async function recommendByIngredients(rawIngredients) {
     .slice(0, 20);
 }
 
+async function getPantryItems() {
+  const [items] = await pool.query("SELECT * FROM pantry_items ORDER BY name ASC, id ASC");
+  return items;
+}
+
+async function addPantryItems(rawItems) {
+  const items = parseIngredients(rawItems);
+
+  if (!items.length) {
+    return;
+  }
+
+  const connection = await pool.getConnection();
+
+  try {
+    await connection.beginTransaction();
+
+    for (const item of items) {
+      await connection.query(
+        "INSERT INTO pantry_items (name, quantity, unit) VALUES (?, ?, ?)",
+        [item.name, item.quantity, item.unit]
+      );
+    }
+
+    await connection.commit();
+  } catch (error) {
+    await connection.rollback();
+    throw error;
+  } finally {
+    connection.release();
+  }
+}
+
+async function deletePantryItem(id) {
+  await pool.query("DELETE FROM pantry_items WHERE id = ?", [id]);
+}
+
+async function recommendFromPantry() {
+  const items = await getPantryItems();
+  const ingredientNames = items.map((item) => item.name).join(", ");
+  return recommendByIngredients(ingredientNames);
+}
+
+async function eatRecipe(recipeId) {
+  const recipe = await getRecipe(recipeId);
+
+  if (!recipe) {
+    throw new Error("Receta no encontrada.");
+  }
+
+  const connection = await pool.getConnection();
+
+  try {
+    await connection.beginTransaction();
+
+    for (const ingredient of recipe.ingredients) {
+      const normalized = normalizeIngredientName(ingredient.name);
+      const [items] = await connection.query("SELECT id, name FROM pantry_items ORDER BY id ASC");
+      const match = items.find((item) => ingredientMatches(normalizeIngredientName(item.name), normalized));
+
+      if (match) {
+        await connection.query("DELETE FROM pantry_items WHERE id = ? LIMIT 1", [match.id]);
+      }
+    }
+
+    await connection.commit();
+  } catch (error) {
+    await connection.rollback();
+    throw error;
+  } finally {
+    connection.release();
+  }
+}
+
 module.exports = {
+  addPantryItems,
   createRecipe,
   deleteRecipe,
+  deletePantryItem,
+  eatRecipe,
   getDashboard,
+  getPantryItems,
   getRecipe,
   getRecipeImage,
+  recommendFromPantry,
   recommendByIngredients,
   searchRecipes,
   updateRecipe,

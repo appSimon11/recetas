@@ -14,9 +14,9 @@ function setPhoto(dataUrl) {
 function ingredientsToText(ingredients) {
   return (ingredients || [])
     .map((item) =>
-      [item.name, item.quantity, item.unit, item.section, item.is_optional ? "opcional" : ""]
+      [item.name, item.quantity, item.unit]
         .filter((part, index) => index === 0 || part)
-        .join(" | ")
+        .join(", ")
     )
     .join("\n");
 }

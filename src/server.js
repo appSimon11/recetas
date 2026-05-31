@@ -4,11 +4,16 @@ const express = require("express");
 const path = require("path");
 const { analyzeRecipeImage } = require("./services/recipeVision");
 const {
+  addPantryItems,
   createRecipe,
   deleteRecipe,
+  deletePantryItem,
+  eatRecipe,
   getDashboard,
+  getPantryItems,
   getRecipe,
   getRecipeImage,
+  recommendFromPantry,
   recommendByIngredients,
   searchRecipes,
   updateRecipe,
@@ -180,12 +185,44 @@ app.get("/recetas/:id/imagen", async (req, res, next) => {
 app.get("/despensa", async (req, res, next) => {
   try {
     const ingredients = req.query.ingredientes || "";
+    const pantryItems = await getPantryItems();
     const recommendations = ingredients ? await recommendByIngredients(ingredients) : [];
+    const pantryRecommendations = await recommendFromPantry();
+
     res.render("pantry", {
       title: "Despensa",
       ingredients,
-      recommendations
+      pantryItems,
+      recommendations,
+      pantryRecommendations
     });
+  } catch (error) {
+    next(error);
+  }
+});
+
+app.post("/despensa", async (req, res, next) => {
+  try {
+    await addPantryItems(req.body.items || "");
+    redirectWithMessage(res, "/despensa", "flash", "Despensa actualizada");
+  } catch (error) {
+    next(error);
+  }
+});
+
+app.post("/despensa/:id/eliminar", async (req, res, next) => {
+  try {
+    await deletePantryItem(req.params.id);
+    redirectWithMessage(res, "/despensa", "flash", "Ingrediente eliminado");
+  } catch (error) {
+    next(error);
+  }
+});
+
+app.post("/despensa/recetas/:id/comer", async (req, res, next) => {
+  try {
+    await eatRecipe(req.params.id);
+    redirectWithMessage(res, "/despensa", "flash", "Buen provecho. Quite esos ingredientes de la despensa.");
   } catch (error) {
     next(error);
   }

@@ -209,6 +209,11 @@ textarea {
   padding: 0 16px;
 }
 
+.button.small {
+  min-height: 36px;
+  padding: 0 12px;
+}
+
 .hero-search button,
 .button.primary {
   background: var(--herb);
@@ -505,9 +510,74 @@ label {
   margin-bottom: 22px;
 }
 
+.pantry-form.flat {
+  background: transparent;
+  border: 0;
+  box-shadow: none;
+  margin-bottom: 18px;
+  padding: 0;
+}
+
+.pantry-layout {
+  display: grid;
+  gap: 20px;
+  grid-template-columns: minmax(300px, 0.9fr) minmax(360px, 1.1fr);
+  margin-bottom: 28px;
+}
+
+.pantry-panel {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 22px;
+  padding: 22px;
+}
+
+.section-head.compact {
+  margin-bottom: 14px;
+}
+
+.section-head.compact h2 {
+  font-size: 24px;
+}
+
+.pantry-list {
+  display: grid;
+  gap: 10px;
+}
+
+.pantry-item {
+  align-items: center;
+  background: var(--cream);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  display: flex;
+  gap: 12px;
+  justify-content: space-between;
+  padding: 12px;
+}
+
+.pantry-item strong,
+.pantry-item span {
+  display: block;
+}
+
+.pantry-item span {
+  color: var(--muted);
+  font-weight: 800;
+  margin-top: 3px;
+}
+
+.manual-pantry {
+  margin-top: 10px;
+}
+
 .recommendations {
   display: grid;
   gap: 16px;
+}
+
+.recommendations.compact-list .recommendation {
+  grid-template-columns: 130px 1fr;
 }
 
 .recommendation {
@@ -531,6 +601,13 @@ label {
   align-items: center;
   display: flex;
   gap: 10px;
+}
+
+.score-row {
+  align-items: center;
+  display: flex;
+  gap: 12px;
+  justify-content: space-between;
 }
 
 .score strong {
@@ -598,6 +675,7 @@ label {
   .recipe-show,
   .recipe-form-layout,
   .recipe-form,
+  .pantry-layout,
   .recommendation,
   .match-columns,
   .toolbar,
