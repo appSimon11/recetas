@@ -1,0 +1,87 @@
+<%- include("../partials/page-start") %>
+
+<section class="page-title">
+  <div>
+    <p class="eyebrow">Recetas</p>
+    <h1>Carga por lote</h1>
+  </div>
+  <a class="button" href="/recetas">Recetas</a>
+</section>
+
+<section class="batch-layout">
+  <article class="batch-guide">
+    <p class="eyebrow">Formato</p>
+    <h2>Una receta por renglon</h2>
+    <p>Columnas: nombre, categoria, cocina, minutos, porciones, ingredientes, preparacion, etiquetas, subtitulo.</p>
+    <p>Ingredientes: separa cada ingrediente con punto y coma. Dentro de cada ingrediente usa coma: ingrediente, cantidad, unidad.</p>
+    <div class="sample-box">
+      <code>nombre,categoria,cocina,minutos,porciones,ingredientes,preparacion,etiquetas,subtitulo</code>
+      <code>"Tacos de pollo","cena","mexicana","25","2","pollo, 2, piezas; tortilla, 6, piezas; salsa, 1, taza","Calienta el pollo y arma los tacos.","rapida, pollo","Tacos faciles"</code>
+    </div>
+    <div class="batch-actions">
+      <button class="button" id="fillBatchSample" type="button">Usar muestra</button>
+      <button class="button" id="downloadBatchTemplate" type="button">Bajar layout</button>
+    </div>
+  </article>
+
+  <form class="bulk-form" method="post" action="/recetas/lote/preview">
+    <label>
+      Pega tus recetas
+      <textarea id="batchText" name="batch_text" rows="14" placeholder='nombre,categoria,cocina,minutos,porciones,ingredientes,preparacion,etiquetas,subtitulo'><%= batchText %></textarea>
+    </label>
+    <button class="button primary" type="submit">Previsualizar</button>
+  </form>
+</section>
+
+<% if (errors.length) { %>
+  <section class="notice danger">
+    <% errors.forEach((error) => { %>
+      <div><%= error %></div>
+    <% }) %>
+  </section>
+<% } %>
+
+<% if (preview) { %>
+  <section class="preview-section">
+    <div class="section-head">
+      <div>
+        <p class="eyebrow">Revision</p>
+        <h2><%= preview.length %> recetas detectadas</h2>
+      </div>
+      <% if (!errors.length && preview.length) { %>
+        <form method="post" action="/recetas/lote">
+          <textarea name="batch_text" hidden><%= batchText %></textarea>
+          <button class="button primary" type="submit">Cargar recetas</button>
+        </form>
+      <% } %>
+    </div>
+
+    <% if (!preview.length) { %>
+      <div class="empty">No hay recetas para previsualizar todavia.</div>
+    <% } %>
+
+    <div class="preview-table">
+      <% preview.forEach((recipe) => { %>
+        <article class="preview-card">
+          <div>
+            <span>Renglon <%= recipe.rowNumber %></span>
+            <h3><%= recipe.title %></h3>
+            <p><%= [recipe.category, recipe.cuisine, `${recipe.prep_minutes} min`, `${recipe.servings} porciones`].filter(Boolean).join(" · ") %></p>
+          </div>
+          <div>
+            <strong>Ingredientes</strong>
+            <p><%= recipe.ingredients.map((item) => [item.name, item.quantity, item.unit].filter(Boolean).join(" ")).join(", ") || "-" %></p>
+          </div>
+          <div>
+            <strong>Preparacion</strong>
+            <p><%= recipe.instructions || "-" %></p>
+          </div>
+        </article>
+      <% }) %>
+    </div>
+  </section>
+<% } %>
+
+<script src="/recipe-batch.js"></script>
+
+<%- include("../partials/page-end") %>

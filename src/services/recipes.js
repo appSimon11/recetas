@@ -17,6 +17,40 @@ function parseList(value) {
     .filter(Boolean);
 }
 
+function parseCsvLine(line) {
+  const cells = [];
+  let current = "";
+  let quoted = false;
+
+  for (let index = 0; index < line.length; index += 1) {
+    const char = line[index];
+    const next = line[index + 1];
+
+    if (char === '"' && next === '"') {
+      current += '"';
+      index += 1;
+    } else if (char === '"') {
+      quoted = !quoted;
+    } else if (char === "," && !quoted) {
+      cells.push(cleanText(current));
+      current = "";
+    } else {
+      current += char;
+    }
+  }
+
+  cells.push(cleanText(current));
+  return cells;
+}
+
+function splitBatchRows(value) {
+  return String(value || "")
+    .split(/\r?\n/)
+    .map(cleanText)
+    .filter(Boolean)
+    .filter((line) => !line.startsWith("#"));
+}
+
 function normalizeIngredientName(value) {
   return cleanText(value)
     .toLowerCase()
@@ -61,6 +95,86 @@ function parseIngredients(value) {
       is_optional: false
     }))
     .filter((item) => item.name);
+}
+
+function parseBatchIngredientList(value) {
+  return String(value || "")
+    .split(";")
+    .map(cleanText)
+    .filter(Boolean)
+    .map((line) => line.includes("|") ? line.split("|").map(cleanText) : line.split(",").map(cleanText))
+    .map((parts) => ({
+      name: parts[0],
+      quantity: parts[1] || "",
+      unit: parts[2] || "",
+      section: "",
+      is_optional: false
+    }))
+    .filter((item) => item.name);
+}
+
+function ingredientsToText(ingredients) {
+  return ingredients
+    .map((item) => [item.name, item.quantity, item.unit].filter(Boolean).join(", "))
+    .join("\n");
+}
+
+function parseRecipeBatch(value) {
+  const rows = splitBatchRows(value);
+  const recipes = [];
+  const errors = [];
+
+  rows.forEach((row, index) => {
+    const columns = parseCsvLine(row);
+    const firstCell = cleanText(columns[0]).toLowerCase();
+
+    if (index === 0 && ["nombre", "titulo", "title"].includes(firstCell)) {
+      return;
+    }
+
+    const [
+      title,
+      category,
+      cuisine,
+      prepMinutes,
+      servings,
+      ingredients,
+      instructions,
+      tags,
+      subtitle
+    ] = columns;
+
+    if (!title) {
+      errors.push(`Renglon ${index + 1}: falta el nombre.`);
+      return;
+    }
+
+    const parsedIngredients = parseBatchIngredientList(ingredients);
+
+    if (!parsedIngredients.length) {
+      errors.push(`Renglon ${index + 1}: falta al menos un ingrediente.`);
+    }
+
+    recipes.push({
+      rowNumber: index + 1,
+      title: cleanText(title),
+      subtitle: cleanText(subtitle),
+      category: cleanText(category),
+      cuisine: cleanText(cuisine),
+      difficulty: "facil",
+      prep_minutes: numberOrDefault(prepMinutes, 30),
+      servings: numberOrDefault(servings, 2),
+      mood: "",
+      notes: "",
+      instructions: cleanText(instructions),
+      extracted_text: "",
+      tags: cleanText(tags),
+      ingredients: parsedIngredients,
+      ingredients_text: ingredientsToText(parsedIngredients)
+    });
+  });
+
+  return { recipes, errors };
 }
 
 function normalizeRecipe(data) {
@@ -164,6 +278,29 @@ async function createRecipe(data) {
   } finally {
     connection.release();
   }
+}
+
+async function createRecipesBatch(rawBatch) {
+  const parsed = parseRecipeBatch(rawBatch);
+
+  if (parsed.errors.length) {
+    return {
+      ...parsed,
+      created: 0
+    };
+  }
+
+  for (const recipe of parsed.recipes) {
+    await createRecipe({
+      ...recipe,
+      ingredients: recipe.ingredients_text
+    });
+  }
+
+  return {
+    ...parsed,
+    created: parsed.recipes.length
+  };
 }
 
 async function updateRecipe(id, data) {
@@ -459,6 +596,7 @@ async function eatRecipe(recipeId) {
 module.exports = {
   addPantryItems,
   createRecipe,
+  createRecipesBatch,
   deleteRecipe,
   deletePantryItem,
   eatRecipe,
@@ -468,6 +606,7 @@ module.exports = {
   getRecipeImage,
   recommendFromPantry,
   recommendByIngredients,
+  parseRecipeBatch,
   searchRecipes,
   updateRecipe,
   updateRecipePhoto

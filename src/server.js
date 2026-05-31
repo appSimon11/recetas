@@ -6,6 +6,7 @@ const { analyzeRecipeImage } = require("./services/recipeVision");
 const {
   addPantryItems,
   createRecipe,
+  createRecipesBatch,
   deleteRecipe,
   deletePantryItem,
   eatRecipe,
@@ -15,6 +16,7 @@ const {
   getRecipeImage,
   recommendFromPantry,
   recommendByIngredients,
+  parseRecipeBatch,
   searchRecipes,
   updateRecipe,
   updateRecipePhoto
@@ -69,6 +71,47 @@ app.get("/recetas/nueva", (req, res) => {
     recipe: {},
     action: "/recetas"
   });
+});
+
+app.get("/recetas/lote", (req, res) => {
+  res.render("recipes/batch", {
+    title: "Carga por lote",
+    batchText: "",
+    preview: null,
+    errors: []
+  });
+});
+
+app.post("/recetas/lote/preview", (req, res) => {
+  const batchText = req.body.batch_text || "";
+  const preview = parseRecipeBatch(batchText);
+
+  res.render("recipes/batch", {
+    title: "Carga por lote",
+    batchText,
+    preview: preview.recipes,
+    errors: preview.errors
+  });
+});
+
+app.post("/recetas/lote", async (req, res, next) => {
+  try {
+    const result = await createRecipesBatch(req.body.batch_text || "");
+
+    if (result.errors.length) {
+      res.status(422).render("recipes/batch", {
+        title: "Carga por lote",
+        batchText: req.body.batch_text || "",
+        preview: result.recipes,
+        errors: result.errors
+      });
+      return;
+    }
+
+    redirectWithMessage(res, "/recetas", "flash", `${result.created} recetas cargadas`);
+  } catch (error) {
+    next(error);
+  }
 });
 
 app.post("/recetas/analizar", async (req, res) => {

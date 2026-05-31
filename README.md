@@ -11,6 +11,7 @@ Recetario visual para guardar comidas con foto, ingredientes, preparacion y busq
 - Vista de receta con foto, ingredientes y pasos.
 - Despensa inteligente: escribe ingredientes disponibles y la app recomienda recetas por porcentaje de coincidencia.
 - Despensa guardada: registra lo que tienes, recibe recomendaciones y descuenta ingredientes cuando cocinas.
+- Carga de recetas por lote con previsualizacion antes de guardar.
 - Edicion y eliminacion de recetas.
 - Lista para Railway + MySQL.
 
@@ -28,6 +29,20 @@ Ejemplo:
 pollo, 2, piezas
 arroz, 1, taza
 limon, 1, pieza
+```
+
+## Carga por lote
+
+En `/recetas/lote`, cada receta va en un renglon con columnas separadas por comas:
+
+```text
+nombre,categoria,cocina,minutos,porciones,ingredientes,preparacion,etiquetas,subtitulo
+```
+
+Si una columna tiene comas internas, ponla entre comillas. En ingredientes, separa cada ingrediente con punto y coma:
+
+```text
+"Tacos de pollo","cena","mexicana","25","2","pollo, 2, piezas; tortilla, 6, piezas; salsa, 1, taza","Calienta el pollo y arma los tacos.","rapida, pollo","Tacos faciles"
 ```
 
 ## Configuracion local

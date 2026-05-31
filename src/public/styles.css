@@ -288,6 +288,12 @@ textarea {
   margin: 0;
 }
 
+.page-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
 .recipe-grid {
   display: grid;
   gap: 18px;
@@ -357,6 +363,94 @@ textarea {
   color: var(--muted);
   font-weight: 800;
   padding: 8px 12px;
+}
+
+.batch-layout {
+  display: grid;
+  gap: 20px;
+  grid-template-columns: minmax(280px, 0.75fr) minmax(420px, 1.25fr);
+  margin-bottom: 24px;
+}
+
+.batch-guide,
+.preview-card {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 22px;
+  padding: 22px;
+}
+
+.batch-guide h2 {
+  margin: 0 0 10px;
+}
+
+.batch-guide p {
+  color: var(--muted);
+  line-height: 1.55;
+}
+
+.sample-box {
+  background: var(--cream);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  display: grid;
+  gap: 8px;
+  margin: 16px 0;
+  overflow-x: auto;
+  padding: 12px;
+}
+
+.sample-box code {
+  color: #3d382f;
+  font-size: 13px;
+  white-space: nowrap;
+}
+
+.batch-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.bulk-form {
+  display: grid;
+  gap: 14px;
+  padding: 22px;
+}
+
+.preview-section {
+  margin-top: 24px;
+}
+
+.preview-table {
+  display: grid;
+  gap: 14px;
+}
+
+.preview-card {
+  display: grid;
+  gap: 14px;
+  grid-template-columns: 1fr 1fr 1fr;
+}
+
+.preview-card span {
+  color: var(--tomato);
+  font-size: 13px;
+  font-weight: 900;
+}
+
+.preview-card h3 {
+  margin: 5px 0;
+}
+
+.preview-card p {
+  color: var(--muted);
+  margin: 0;
+}
+
+.preview-card strong {
+  display: block;
+  margin-bottom: 6px;
 }
 
 .recipe-show,
@@ -670,6 +764,8 @@ label {
   }
 
   .kitchen-hero,
+  .batch-layout,
+  .preview-card,
   .metrics,
   .recipe-grid,
   .recipe-show,
