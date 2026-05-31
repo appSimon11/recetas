@@ -1,0 +1,32 @@
+<%- include("../partials/page-start") %>
+
+<section class="page-title">
+  <div>
+    <p class="eyebrow">Recetario</p>
+    <h1>Recetas</h1>
+  </div>
+  <a class="button primary" href="/recetas/nueva">Nueva receta</a>
+</section>
+
+<form class="toolbar" method="get" action="/recetas">
+  <input type="search" name="q" value="<%= query %>" placeholder="Buscar por receta, ingrediente, cocina, etiqueta">
+  <button class="button" type="submit">Buscar</button>
+</form>
+
+<section class="recipe-grid">
+  <% if (!recipes.length) { %>
+    <div class="empty">No encontramos recetas con esa busqueda.</div>
+  <% } %>
+  <% recipes.forEach((recipe) => { %>
+    <a class="recipe-card" href="/recetas/<%= recipe.id %>">
+      <img src="/recetas/<%= recipe.id %>/imagen" alt="<%= recipe.title %>">
+      <div>
+        <span><%= recipe.prep_minutes %> min · <%= recipe.difficulty %></span>
+        <h3><%= recipe.title %></h3>
+        <p><%= recipe.ingredient_summary || "Sin ingredientes" %></p>
+      </div>
+    </a>
+  <% }) %>
+</section>
+
+<%- include("../partials/page-end") %>

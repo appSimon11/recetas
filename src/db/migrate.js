@@ -1,0 +1,49 @@
+require("dotenv").config();
+
+const fs = require("fs/promises");
+const path = require("path");
+const mysql = require("mysql2/promise");
+
+async function migrate() {
+  if (!process.env.DATABASE_URL) {
+    throw new Error("Falta DATABASE_URL. No se puede ejecutar la migracion.");
+  }
+
+  const databaseUrl = new URL(process.env.DATABASE_URL);
+  const databaseName = databaseUrl.pathname.replace(/^\//, "");
+
+  if (!/^[a-zA-Z0-9_]+$/.test(databaseName)) {
+    throw new Error("El nombre de la base de datos solo puede usar letras, numeros y guion bajo.");
+  }
+
+  const sql = await fs.readFile(path.join(__dirname, "schema.sql"), "utf8");
+  const setupConnection = await mysql.createConnection({
+    host: databaseUrl.hostname,
+    port: databaseUrl.port || 3306,
+    user: decodeURIComponent(databaseUrl.username),
+    password: decodeURIComponent(databaseUrl.password)
+  });
+
+  try {
+    await setupConnection.query(`CREATE DATABASE IF NOT EXISTS \`${databaseName}\``);
+  } finally {
+    await setupConnection.end();
+  }
+
+  const connection = await mysql.createConnection({
+    uri: process.env.DATABASE_URL,
+    multipleStatements: true
+  });
+
+  try {
+    await connection.query(sql);
+    console.log("Migracion completada.");
+  } finally {
+    await connection.end();
+  }
+}
+
+migrate().catch((error) => {
+  console.error(error);
+  process.exit(1);
+});

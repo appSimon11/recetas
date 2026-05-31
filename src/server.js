@@ -1,0 +1,204 @@
+require("dotenv").config();
+
+const express = require("express");
+const path = require("path");
+const { analyzeRecipeImage } = require("./services/recipeVision");
+const {
+  createRecipe,
+  deleteRecipe,
+  getDashboard,
+  getRecipe,
+  getRecipeImage,
+  recommendByIngredients,
+  searchRecipes,
+  updateRecipe,
+  updateRecipePhoto
+} = require("./services/recipes");
+
+const app = express();
+const port = process.env.PORT || 3000;
+
+function redirectWithMessage(res, path, key, message) {
+  res.redirect(`${path}?${key}=${encodeURIComponent(message)}`);
+}
+
+app.set("view engine", "ejs");
+app.set("views", path.join(__dirname, "views"));
+
+app.use(express.urlencoded({ extended: true, limit: "22mb" }));
+app.use(express.json({ limit: "22mb" }));
+app.use(express.static(path.join(__dirname, "public")));
+
+app.use((req, res, next) => {
+  res.locals.currentPath = req.path;
+  res.locals.flash = req.query.flash || "";
+  res.locals.error = req.query.error || "";
+  next();
+});
+
+app.get("/", async (req, res, next) => {
+  try {
+    const dashboard = await getDashboard();
+    res.render("dashboard", { title: "Cocina", dashboard });
+  } catch (error) {
+    next(error);
+  }
+});
+
+app.get("/recetas", async (req, res, next) => {
+  try {
+    const recipes = await searchRecipes(req.query.q || "");
+    res.render("recipes/index", {
+      title: "Recetas",
+      recipes,
+      query: req.query.q || ""
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+app.get("/recetas/nueva", (req, res) => {
+  res.render("recipes/form", {
+    title: "Nueva receta",
+    recipe: {},
+    action: "/recetas"
+  });
+});
+
+app.post("/recetas/analizar", async (req, res) => {
+  try {
+    const imageDataUrl = req.body.image_data_url || "";
+    const analysis = await analyzeRecipeImage(imageDataUrl);
+    res.json({ analysis });
+  } catch (error) {
+    res.status(422).json({ message: error.message });
+  }
+});
+
+app.post("/recetas", async (req, res, next) => {
+  try {
+    await createRecipe(req.body);
+    redirectWithMessage(res, "/recetas", "flash", "Receta guardada");
+  } catch (error) {
+    next(error);
+  }
+});
+
+app.get("/recetas/:id", async (req, res, next) => {
+  try {
+    const recipe = await getRecipe(req.params.id);
+
+    if (!recipe) {
+      redirectWithMessage(res, "/recetas", "error", "Receta no encontrada");
+      return;
+    }
+
+    res.render("recipes/show", { title: recipe.title, recipe });
+  } catch (error) {
+    next(error);
+  }
+});
+
+app.get("/recetas/:id/editar", async (req, res, next) => {
+  try {
+    const recipe = await getRecipe(req.params.id);
+
+    if (!recipe) {
+      redirectWithMessage(res, "/recetas", "error", "Receta no encontrada");
+      return;
+    }
+
+    res.render("recipes/form", {
+      title: "Editar receta",
+      recipe,
+      action: `/recetas/${recipe.id}`
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+app.post("/recetas/:id", async (req, res, next) => {
+  try {
+    await updateRecipe(req.params.id, req.body);
+    redirectWithMessage(res, `/recetas/${req.params.id}`, "flash", "Receta actualizada");
+  } catch (error) {
+    next(error);
+  }
+});
+
+app.post("/recetas/:id/foto", async (req, res, next) => {
+  try {
+    await updateRecipePhoto(req.params.id, req.body.image_data_url);
+    redirectWithMessage(res, `/recetas/${req.params.id}/editar`, "flash", "Foto actualizada");
+  } catch (error) {
+    next(error);
+  }
+});
+
+app.post("/recetas/:id/eliminar", async (req, res, next) => {
+  try {
+    await deleteRecipe(req.params.id);
+    redirectWithMessage(res, "/recetas", "flash", "Receta eliminada");
+  } catch (error) {
+    next(error);
+  }
+});
+
+app.get("/recetas/:id/imagen", async (req, res, next) => {
+  try {
+    const image = await getRecipeImage(req.params.id);
+
+    if (!image || !image.image_data) {
+      res.set("Content-Type", "image/svg+xml");
+      res.send(`
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 600">
+          <defs>
+            <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
+              <stop stop-color="#f4eadf"/>
+              <stop offset="1" stop-color="#d9ead7"/>
+            </linearGradient>
+          </defs>
+          <rect width="800" height="600" fill="url(#g)"/>
+          <circle cx="400" cy="270" r="116" fill="#ffffff" opacity=".7"/>
+          <path d="M315 305c54 44 122 44 170 0" fill="none" stroke="#6c7a55" stroke-width="16" stroke-linecap="round"/>
+          <text x="400" y="445" text-anchor="middle" font-family="Arial" font-size="38" fill="#536047">Sin foto</text>
+        </svg>
+      `);
+      return;
+    }
+
+    res.set("Content-Type", image.image_mime);
+    res.set("Cache-Control", "public, max-age=3600");
+    res.send(image.image_data);
+  } catch (error) {
+    next(error);
+  }
+});
+
+app.get("/despensa", async (req, res, next) => {
+  try {
+    const ingredients = req.query.ingredientes || "";
+    const recommendations = ingredients ? await recommendByIngredients(ingredients) : [];
+    res.render("pantry", {
+      title: "Despensa",
+      ingredients,
+      recommendations
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+app.use((error, req, res, next) => {
+  console.error(error);
+  res.status(500).render("error", {
+    title: "Algo salio mal",
+    message: error.message || "No se pudo completar la operacion."
+  });
+});
+
+app.listen(port, () => {
+  console.log(`Recetario listo en http://localhost:${port}`);
+});

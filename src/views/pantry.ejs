@@ -1,0 +1,48 @@
+<%- include("partials/page-start") %>
+
+<section class="page-title">
+  <div>
+    <p class="eyebrow">Despensa inteligente</p>
+    <h1>Que cocinar con lo que tienes</h1>
+  </div>
+  <a class="button" href="/recetas/nueva">Nueva receta</a>
+</section>
+
+<form class="pantry-form" method="get" action="/despensa">
+  <label>
+    Ingredientes disponibles
+    <textarea name="ingredientes" rows="5" placeholder="pollo, arroz, crema, champiñones, limon"><%= ingredients %></textarea>
+  </label>
+  <button class="button primary" type="submit">Encontrar recetas</button>
+</form>
+
+<section class="recommendations">
+  <% if (ingredients && !recommendations.length) { %>
+    <div class="empty">No encontre recetas con esos ingredientes todavia.</div>
+  <% } %>
+  <% recommendations.forEach((recipe) => { %>
+    <article class="recommendation">
+      <img src="/recetas/<%= recipe.id %>/imagen" alt="<%= recipe.title %>">
+      <div>
+        <div class="score">
+          <strong><%= recipe.score %>%</strong>
+          <span><%= recipe.convenience %></span>
+        </div>
+        <h2><a href="/recetas/<%= recipe.id %>"><%= recipe.title %></a></h2>
+        <p><%= recipe.subtitle || recipe.ingredient_summary || '' %></p>
+        <div class="match-columns">
+          <div>
+            <h3>Tienes</h3>
+            <p><%= recipe.hits.join(", ") || "-" %></p>
+          </div>
+          <div>
+            <h3>Falta</h3>
+            <p><%= recipe.missing.join(", ") || "Nada" %></p>
+          </div>
+        </div>
+      </div>
+    </article>
+  <% }) %>
+</section>
+
+<%- include("partials/page-end") %>

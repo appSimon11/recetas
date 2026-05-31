@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title><%= title %> | Mesa Viva</title>
+    <link rel="stylesheet" href="/styles.css">
+  </head>
+  <body>
+    <header class="app-header">
+      <a class="brand" href="/">
+        <span>Mesa Viva</span>
+        <small>recetas que aprovechan lo que hay</small>
+      </a>
+      <nav aria-label="Principal">
+        <a class="<%= currentPath === '/' ? 'active' : '' %>" href="/">Inicio</a>
+        <a class="<%= currentPath.startsWith('/recetas') ? 'active' : '' %>" href="/recetas">Recetas</a>
+        <a class="<%= currentPath.startsWith('/despensa') ? 'active' : '' %>" href="/despensa">Despensa</a>
+        <a class="cta <%= currentPath === '/recetas/nueva' ? 'active' : '' %>" href="/recetas/nueva">Nueva</a>
+      </nav>
+    </header>
+
+    <main class="page">
+      <% if (flash) { %>
+        <div class="notice success"><%= flash %></div>
+      <% } %>
+
+      <% if (error) { %>
+        <div class="notice danger"><%= error %></div>
+      <% } %>
