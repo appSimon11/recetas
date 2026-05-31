@@ -33,16 +33,21 @@ limon, 1, pieza
 
 ## Carga por lote
 
-En `/recetas/lote`, cada receta va en un renglon con columnas separadas por comas:
+En `/recetas/lote`, el layout deja instrucciones arriba. La app ignora los primeros 4 renglones y lee recetas desde el renglon 5.
 
 ```text
-nombre,categoria,cocina,minutos,porciones,ingredientes,preparacion,etiquetas,subtitulo
+Renglon 1: titulo del layout
+Renglon 2: nota
+Renglon 3: Las recetas empiezan en el renglon 5.
+Renglon 4: encabezados
+Renglon 5: primera receta
 ```
 
-Si una columna tiene comas internas, ponla entre comillas. En ingredientes, separa cada ingrediente con punto y coma:
+Cada ingrediente usa tres columnas propias: ingrediente, cantidad y unidad. Puedes llenar hasta 10 ingredientes por receta.
 
 ```text
-"Tacos de pollo","cena","mexicana","25","2","pollo, 2, piezas; tortilla, 6, piezas; salsa, 1, taza","Calienta el pollo y arma los tacos.","rapida, pollo","Tacos faciles"
+nombre,categoria,cocina,minutos,porciones,ingrediente 1,cantidad 1,unidad 1,ingrediente 2,cantidad 2,unidad 2,...
+"Tacos de pollo","cena","mexicana","25","2","pollo","2","piezas","tortilla","6","piezas"
 ```
 
 ## Configuracion local

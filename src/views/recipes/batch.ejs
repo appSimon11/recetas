@@ -12,11 +12,12 @@
   <article class="batch-guide">
     <p class="eyebrow">Formato</p>
     <h2>Una receta por renglon</h2>
-    <p>Columnas: nombre, categoria, cocina, minutos, porciones, ingredientes, preparacion, etiquetas, subtitulo.</p>
-    <p>Ingredientes: separa cada ingrediente con punto y coma. Dentro de cada ingrediente usa coma: ingrediente, cantidad, unidad.</p>
+    <p>El layout trae instrucciones arriba. La app ignora los primeros 4 renglones y empieza a leer recetas desde el renglon 5.</p>
+    <p>Usa columnas separadas para cada ingrediente: ingrediente 1, cantidad 1, unidad 1, ingrediente 2, cantidad 2, unidad 2.</p>
     <div class="sample-box">
-      <code>nombre,categoria,cocina,minutos,porciones,ingredientes,preparacion,etiquetas,subtitulo</code>
-      <code>"Tacos de pollo","cena","mexicana","25","2","pollo, 2, piezas; tortilla, 6, piezas; salsa, 1, taza","Calienta el pollo y arma los tacos.","rapida, pollo","Tacos faciles"</code>
+      <code>Renglon 3: Las recetas empiezan en el renglon 5.</code>
+      <code>Renglon 4: encabezados.</code>
+      <code>Renglon 5: primera receta.</code>
     </div>
     <div class="batch-actions">
       <button class="button" id="fillBatchSample" type="button">Usar muestra</button>
@@ -27,7 +28,7 @@
   <form class="bulk-form" method="post" action="/recetas/lote/preview">
     <label>
       Pega tus recetas
-      <textarea id="batchText" name="batch_text" rows="14" placeholder='nombre,categoria,cocina,minutos,porciones,ingredientes,preparacion,etiquetas,subtitulo'><%= batchText %></textarea>
+      <textarea id="batchText" name="batch_text" rows="16" placeholder="Baja el layout o usa la muestra para empezar"><%= batchText %></textarea>
     </label>
     <button class="button primary" type="submit">Previsualizar</button>
   </form>

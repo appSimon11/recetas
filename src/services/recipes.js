@@ -26,7 +26,7 @@ function parseCsvLine(line) {
     const char = line[index];
     const next = line[index + 1];
 
-    if (char === '"' && next === '"') {
+    if (char === '"' && quoted && next === '"') {
       current += '"';
       index += 1;
     } else if (char === '"') {
@@ -46,9 +46,7 @@ function parseCsvLine(line) {
 function splitBatchRows(value) {
   return String(value || "")
     .split(/\r?\n/)
-    .map(cleanText)
-    .filter(Boolean)
-    .filter((line) => !line.startsWith("#"));
+    .map((line) => line.trimEnd());
 }
 
 function normalizeIngredientName(value) {
@@ -97,22 +95,6 @@ function parseIngredients(value) {
     .filter((item) => item.name);
 }
 
-function parseBatchIngredientList(value) {
-  return String(value || "")
-    .split(";")
-    .map(cleanText)
-    .filter(Boolean)
-    .map((line) => line.includes("|") ? line.split("|").map(cleanText) : line.split(",").map(cleanText))
-    .map((parts) => ({
-      name: parts[0],
-      quantity: parts[1] || "",
-      unit: parts[2] || "",
-      section: "",
-      is_optional: false
-    }))
-    .filter((item) => item.name);
-}
-
 function ingredientsToText(ingredients) {
   return ingredients
     .map((item) => [item.name, item.quantity, item.unit].filter(Boolean).join(", "))
@@ -120,17 +102,12 @@ function ingredientsToText(ingredients) {
 }
 
 function parseRecipeBatch(value) {
-  const rows = splitBatchRows(value);
+  const rows = splitBatchRows(value).slice(4).filter((line) => cleanText(line));
   const recipes = [];
   const errors = [];
 
   rows.forEach((row, index) => {
     const columns = parseCsvLine(row);
-    const firstCell = cleanText(columns[0]).toLowerCase();
-
-    if (index === 0 && ["nombre", "titulo", "title"].includes(firstCell)) {
-      return;
-    }
 
     const [
       title,
@@ -138,25 +115,74 @@ function parseRecipeBatch(value) {
       cuisine,
       prepMinutes,
       servings,
-      ingredients,
+      ingredient1,
+      quantity1,
+      unit1,
+      ingredient2,
+      quantity2,
+      unit2,
+      ingredient3,
+      quantity3,
+      unit3,
+      ingredient4,
+      quantity4,
+      unit4,
+      ingredient5,
+      quantity5,
+      unit5,
+      ingredient6,
+      quantity6,
+      unit6,
+      ingredient7,
+      quantity7,
+      unit7,
+      ingredient8,
+      quantity8,
+      unit8,
+      ingredient9,
+      quantity9,
+      unit9,
+      ingredient10,
+      quantity10,
+      unit10,
       instructions,
       tags,
       subtitle
     ] = columns;
 
     if (!title) {
-      errors.push(`Renglon ${index + 1}: falta el nombre.`);
+      errors.push(`Renglon ${index + 5}: falta el nombre.`);
       return;
     }
 
-    const parsedIngredients = parseBatchIngredientList(ingredients);
+    const ingredientColumns = [
+      [ingredient1, quantity1, unit1],
+      [ingredient2, quantity2, unit2],
+      [ingredient3, quantity3, unit3],
+      [ingredient4, quantity4, unit4],
+      [ingredient5, quantity5, unit5],
+      [ingredient6, quantity6, unit6],
+      [ingredient7, quantity7, unit7],
+      [ingredient8, quantity8, unit8],
+      [ingredient9, quantity9, unit9],
+      [ingredient10, quantity10, unit10]
+    ];
+    const parsedIngredients = ingredientColumns
+      .map(([name, quantity, unit]) => ({
+        name: cleanText(name),
+        quantity: cleanText(quantity),
+        unit: cleanText(unit),
+        section: "",
+        is_optional: false
+      }))
+      .filter((item) => item.name);
 
     if (!parsedIngredients.length) {
-      errors.push(`Renglon ${index + 1}: falta al menos un ingrediente.`);
+      errors.push(`Renglon ${index + 5}: falta al menos un ingrediente.`);
     }
 
     recipes.push({
-      rowNumber: index + 1,
+      rowNumber: index + 5,
       title: cleanText(title),
       subtitle: cleanText(subtitle),
       category: cleanText(category),
