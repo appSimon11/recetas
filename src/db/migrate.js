@@ -11,6 +11,10 @@ async function migrate() {
     throw new Error("Falta DATABASE_URL o MYSQL_URL. No se puede ejecutar la migracion.");
   }
 
+  if (!configuredDatabaseUrl.startsWith("mysql://") && !configuredDatabaseUrl.startsWith("mysql2://")) {
+    throw new Error("DATABASE_URL o MYSQL_URL debe ser una URL completa de MySQL, por ejemplo ${{ MySQL.MYSQL_URL }} en Railway.");
+  }
+
   const databaseUrl = new URL(configuredDatabaseUrl);
   const databaseName = databaseUrl.pathname.replace(/^\//, "");
 
