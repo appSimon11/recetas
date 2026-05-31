@@ -5,11 +5,13 @@ const path = require("path");
 const mysql = require("mysql2/promise");
 
 async function migrate() {
-  if (!process.env.DATABASE_URL) {
-    throw new Error("Falta DATABASE_URL. No se puede ejecutar la migracion.");
+  const configuredDatabaseUrl = process.env.DATABASE_URL || process.env.MYSQL_URL;
+
+  if (!configuredDatabaseUrl) {
+    throw new Error("Falta DATABASE_URL o MYSQL_URL. No se puede ejecutar la migracion.");
   }
 
-  const databaseUrl = new URL(process.env.DATABASE_URL);
+  const databaseUrl = new URL(configuredDatabaseUrl);
   const databaseName = databaseUrl.pathname.replace(/^\//, "");
 
   if (!/^[a-zA-Z0-9_]+$/.test(databaseName)) {
@@ -31,7 +33,7 @@ async function migrate() {
   }
 
   const connection = await mysql.createConnection({
-    uri: process.env.DATABASE_URL,
+    uri: configuredDatabaseUrl,
     multipleStatements: true
   });
 
