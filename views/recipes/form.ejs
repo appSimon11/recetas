@@ -1,0 +1,105 @@
+<%- include("../partials/page-start") %>
+
+<section class="page-title">
+  <div>
+    <p class="eyebrow">Receta</p>
+    <h1><%= title %></h1>
+  </div>
+  <a class="button" href="/recetas">Recetas</a>
+</section>
+
+<section class="recipe-form-layout">
+  <div class="capture-panel">
+    <img id="previewImage" class="preview-image <%= recipe.id ? 'visible' : '' %>" src="<%= recipe.id ? `/recetas/${recipe.id}/imagen` : '' %>" alt="Foto de receta">
+    <% if (!recipe.id) { %>
+      <label class="button file-button">
+        Foto o captura
+        <input id="photoInput" type="file" accept="image/*" capture="environment">
+      </label>
+      <button class="button primary" id="analyzeImage" type="button" disabled>Leer foto</button>
+      <span id="analysisStatus"></span>
+    <% } else { %>
+      <form method="post" action="/recetas/<%= recipe.id %>/foto">
+        <input id="photoDataUrl" type="hidden" name="image_data_url" required>
+        <label class="button file-button">
+          Cambiar foto
+          <input id="photoUploadInput" type="file" accept="image/*" capture="environment">
+        </label>
+        <button id="photoUploadSubmit" class="button primary photo-submit" type="submit" disabled>Guardar foto</button>
+      </form>
+    <% } %>
+  </div>
+
+  <form class="recipe-form" method="post" action="<%= action %>">
+    <input id="imageDataUrl" type="hidden" name="image_data_url">
+    <input id="extractedText" type="hidden" name="extracted_text" value="<%= recipe.extracted_text || '' %>">
+    <label>
+      Nombre
+      <input id="title" name="title" value="<%= recipe.title || '' %>" required>
+    </label>
+    <label>
+      Subtitulo
+      <input id="subtitle" name="subtitle" value="<%= recipe.subtitle || '' %>" placeholder="Ej. cena rapida con sobras bonitas">
+    </label>
+    <label>
+      Categoria
+      <input id="category" name="category" value="<%= recipe.category || '' %>" placeholder="Desayuno, comida, cena">
+    </label>
+    <label>
+      Cocina
+      <input id="cuisine" name="cuisine" value="<%= recipe.cuisine || '' %>" placeholder="Mexicana, italiana, casera">
+    </label>
+    <label>
+      Dificultad
+      <select name="difficulty">
+        <% ["facil", "media", "especial"].forEach((difficulty) => { %>
+          <option value="<%= difficulty %>" <%= recipe.difficulty === difficulty ? 'selected' : '' %>><%= difficulty %></option>
+        <% }) %>
+      </select>
+    </label>
+    <label>
+      Minutos
+      <input type="number" min="1" name="prep_minutes" value="<%= recipe.prep_minutes || 30 %>">
+    </label>
+    <label>
+      Porciones
+      <input type="number" min="1" name="servings" value="<%= recipe.servings || 2 %>">
+    </label>
+    <label>
+      Mood
+      <input id="mood" name="mood" value="<%= recipe.mood || '' %>" placeholder="Ligero, apapachador, botanero">
+    </label>
+    <label class="full">
+      Ingredientes
+      <span class="field-help">Uno por renglon: ingrediente, cantidad, unidad</span>
+      <textarea id="ingredients" name="ingredients" rows="8"><%= recipe.ingredients_text || '' %></textarea>
+    </label>
+    <label class="full">
+      Preparacion
+      <textarea id="instructions" name="instructions" rows="8"><%= recipe.instructions || '' %></textarea>
+    </label>
+    <label>
+      Etiquetas
+      <input id="tags" name="tags" value="<%= recipe.tags_text || '' %>" placeholder="rapida, sobras, comfort">
+    </label>
+    <label>
+      Notas
+      <input name="notes" value="<%= recipe.notes || '' %>">
+    </label>
+    <label class="full">
+      Texto leido
+      <textarea id="extractedPreview" rows="4" readonly><%= recipe.extracted_text || '' %></textarea>
+    </label>
+    <div class="form-actions full">
+      <button class="button primary" type="submit">Guardar receta</button>
+    </div>
+  </form>
+</section>
+
+<% if (recipe.id) { %>
+  <script src="/photo-upload.js"></script>
+<% } else { %>
+  <script src="/recipe-capture.js"></script>
+<% } %>
+
+<%- include("../partials/page-end") %>
