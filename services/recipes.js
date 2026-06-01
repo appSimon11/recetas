@@ -101,6 +101,56 @@ function ingredientsToText(ingredients) {
     .join("\n");
 }
 
+function formatIngredientLine(item) {
+  return [item.name, item.quantity, item.unit].filter(Boolean).join(" ");
+}
+
+function parseJsonArray(value) {
+  try {
+    const parsed = JSON.parse(value || "[]");
+    return Array.isArray(parsed) ? parsed : [];
+  } catch (error) {
+    return [];
+  }
+}
+
+function normalizeIds(value) {
+  return []
+    .concat(value || [])
+    .map((item) => Number.parseInt(item, 10))
+    .filter((item) => Number.isFinite(item) && item > 0);
+}
+
+function mergeIngredientGroups(items) {
+  const groups = new Map();
+
+  for (const item of items) {
+    const key = `${normalizeIngredientName(item.name)}|${cleanText(item.unit).toLowerCase()}`;
+
+    if (!groups.has(key)) {
+      groups.set(key, {
+        name: cleanText(item.name),
+        quantity: cleanText(item.quantity),
+        unit: cleanText(item.unit),
+        bought: Boolean(item.bought)
+      });
+      continue;
+    }
+
+    const current = groups.get(key);
+    const currentQuantity = Number.parseFloat(current.quantity);
+    const nextQuantity = Number.parseFloat(item.quantity);
+
+    if (Number.isFinite(currentQuantity) && Number.isFinite(nextQuantity) && current.unit === cleanText(item.unit)) {
+      current.quantity = String(currentQuantity + nextQuantity);
+    } else if (item.quantity && !String(current.quantity).includes(item.quantity)) {
+      current.quantity = [current.quantity, item.quantity].filter(Boolean).join(" + ");
+    }
+  }
+
+  return Array.from(groups.values());
+}
+
 function parseRecipeBatch(value) {
   const rows = splitBatchRows(value).slice(4).filter((line) => cleanText(line));
   const recipes = [];
@@ -400,7 +450,7 @@ async function getRecipe(id) {
   recipe.ingredients = ingredients;
   recipe.tags = tags.map((item) => item.tag);
   recipe.ingredients_text = ingredients
-    .map((item) => [item.name, item.quantity, item.unit].filter(Boolean).join(" | "))
+    .map((item) => [item.name, item.quantity, item.unit].filter(Boolean).join(", "))
     .join("\n");
   recipe.tags_text = recipe.tags.join(", ");
 
@@ -578,6 +628,19 @@ async function addPantryItems(rawItems) {
   }
 }
 
+async function addPantryItem(item) {
+  const name = cleanText(item.name);
+
+  if (!name) {
+    return;
+  }
+
+  await pool.query(
+    "INSERT INTO pantry_items (name, quantity, unit) VALUES (?, ?, ?)",
+    [name, cleanText(item.quantity), cleanText(item.unit)]
+  );
+}
+
 async function deletePantryItem(id) {
   await pool.query("DELETE FROM pantry_items WHERE id = ?", [id]);
 }
@@ -619,13 +682,124 @@ async function eatRecipe(recipeId) {
   }
 }
 
+async function buildChefPlanPreview(recipeIds) {
+  const ids = normalizeIds(recipeIds);
+  const pantryItems = await getPantryItems();
+  const recipes = (await Promise.all(ids.map((id) => getRecipe(id)))).filter(Boolean);
+  const available = [];
+  const missing = [];
+
+  for (const recipe of recipes) {
+    for (const ingredient of recipe.ingredients) {
+      const normalized = normalizeIngredientName(ingredient.name);
+      const pantryMatch = pantryItems.find((item) => (
+        ingredientMatches(normalizeIngredientName(item.name), normalized)
+      ));
+
+      if (pantryMatch) {
+        available.push({
+          name: ingredient.name,
+          quantity: ingredient.quantity,
+          unit: ingredient.unit,
+          recipe: recipe.title
+        });
+      } else {
+        missing.push({
+          name: ingredient.name,
+          quantity: ingredient.quantity,
+          unit: ingredient.unit,
+          recipe: recipe.title,
+          bought: false
+        });
+      }
+    }
+  }
+
+  return {
+    recipes,
+    recipeNames: recipes.map((recipe) => recipe.title),
+    pantryItems: mergeIngredientGroups(available),
+    shoppingItems: mergeIngredientGroups(missing)
+  };
+}
+
+async function createChefPlan(recipeIds) {
+  const preview = await buildChefPlanPreview(recipeIds);
+
+  if (!preview.recipes.length) {
+    throw new Error("Selecciona al menos una receta para crear el plan.");
+  }
+
+  const [result] = await pool.query(
+    `
+      INSERT INTO chef_plans (recipe_names_json, pantry_items_json, shopping_items_json)
+      VALUES (?, ?, ?)
+    `,
+    [
+      JSON.stringify(preview.recipeNames),
+      JSON.stringify(preview.pantryItems),
+      JSON.stringify(preview.shoppingItems)
+    ]
+  );
+
+  return result.insertId;
+}
+
+async function getChefPlan(id) {
+  const [rows] = await pool.query("SELECT * FROM chef_plans WHERE id = ? LIMIT 1", [id]);
+  const plan = rows[0];
+
+  if (!plan) {
+    return null;
+  }
+
+  plan.recipeNames = parseJsonArray(plan.recipe_names_json);
+  plan.pantryItems = parseJsonArray(plan.pantry_items_json);
+  plan.shoppingItems = parseJsonArray(plan.shopping_items_json);
+  plan.copyText = [
+    `Plan del chef: ${plan.recipeNames.join(", ")}`,
+    "",
+    "Comprar:",
+    ...plan.shoppingItems.filter((item) => !item.bought).map((item) => `- ${formatIngredientLine(item)}`)
+  ].join("\n");
+
+  return plan;
+}
+
+async function markChefPlanItemBought(planId, itemIndex) {
+  const plan = await getChefPlan(planId);
+
+  if (!plan) {
+    throw new Error("Plan no encontrado.");
+  }
+
+  const index = Number.parseInt(itemIndex, 10);
+  const item = plan.shoppingItems[index];
+
+  if (!item) {
+    throw new Error("Ingrediente no encontrado.");
+  }
+
+  if (!item.bought) {
+    item.bought = true;
+    await addPantryItem(item);
+    await pool.query(
+      "UPDATE chef_plans SET shopping_items_json = ? WHERE id = ?",
+      [JSON.stringify(plan.shoppingItems), planId]
+    );
+  }
+}
+
 module.exports = {
   addPantryItems,
+  buildChefPlanPreview,
   createRecipe,
   createRecipesBatch,
+  createChefPlan,
   deleteRecipe,
   deletePantryItem,
   eatRecipe,
+  getChefPlan,
   getDashboard,
   getPantryItems,
   getRecipe,
@@ -633,6 +807,7 @@ module.exports = {
   recommendFromPantry,
   recommendByIngredients,
   parseRecipeBatch,
+  markChefPlanItemBought,
   searchRecipes,
   updateRecipe,
   updateRecipePhoto

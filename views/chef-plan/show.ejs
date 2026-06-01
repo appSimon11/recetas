@@ -1,0 +1,47 @@
+<%- include("../partials/page-start") %>
+
+<section class="page-title">
+  <div>
+    <p class="eyebrow">Plan del chef</p>
+    <h1>Lista lista para compartir</h1>
+  </div>
+  <a class="button primary" href="/plan-chef/<%= plan.id %>/super">Usar en supermercado</a>
+</section>
+
+<section class="chef-plan-card">
+  <div class="recipe-banner">
+    <% plan.recipeNames.forEach((name) => { %>
+      <span><%= name %></span>
+    <% }) %>
+  </div>
+
+  <div class="plan-summary-grid">
+    <article>
+      <h3>Ya hay en despensa</h3>
+      <ul>
+        <% plan.pantryItems.forEach((item) => { %>
+          <li><%= [item.name, item.quantity, item.unit].filter(Boolean).join(" ") %></li>
+        <% }) %>
+        <% if (!plan.pantryItems.length) { %><li>Nada de esta lista todavia.</li><% } %>
+      </ul>
+    </article>
+    <article>
+      <h3>Hay que comprar</h3>
+      <ul>
+        <% plan.shoppingItems.filter((item) => !item.bought).forEach((item) => { %>
+          <li><%= [item.name, item.quantity, item.unit].filter(Boolean).join(" ") %></li>
+        <% }) %>
+        <% if (!plan.shoppingItems.filter((item) => !item.bought).length) { %><li>No falta nada.</li><% } %>
+      </ul>
+    </article>
+  </div>
+
+  <textarea id="copyPlanText" readonly><%= plan.copyText %></textarea>
+  <div class="form-actions">
+    <button class="button" id="copyPlanButton" type="button">Copiar al portapapeles</button>
+  </div>
+</section>
+
+<script src="/chef-plan.js"></script>
+
+<%- include("../partials/page-end") %>

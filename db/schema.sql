@@ -69,3 +69,14 @@ CREATE TABLE IF NOT EXISTS pantry_items (
   PRIMARY KEY (id),
   KEY pantry_items_name_index (name)
 );
+
+CREATE TABLE IF NOT EXISTS chef_plans (
+  id INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  title VARCHAR(180) NOT NULL DEFAULT 'Plan del chef',
+  recipe_names_json LONGTEXT NOT NULL,
+  pantry_items_json LONGTEXT NOT NULL,
+  shopping_items_json LONGTEXT NOT NULL,
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (id)
+);

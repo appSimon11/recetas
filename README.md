@@ -11,6 +11,7 @@ Recetario visual para guardar comidas con foto, ingredientes, preparacion y busq
 - Vista de receta con foto, ingredientes y pasos.
 - Despensa inteligente: escribe ingredientes disponibles y la app recomienda recetas por porcentaje de coincidencia.
 - Despensa guardada: registra lo que tienes, recibe recomendaciones y descuenta ingredientes cuando cocinas.
+- Plan del chef: selecciona recetas, genera lista de compra, copia la lista y usa modo supermercado para añadir compras a despensa.
 - Carga de recetas por lote con previsualizacion antes de guardar.
 - Edicion y eliminacion de recetas.
 - Lista para Railway + MySQL.

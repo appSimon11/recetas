@@ -1,0 +1,36 @@
+<%- include("../partials/page-start") %>
+
+<section class="shopping-screen">
+  <div class="shopping-head">
+    <div>
+      <p class="eyebrow">Supermercado</p>
+      <h1>Lista de compra</h1>
+    </div>
+    <a class="button" href="/plan-chef/<%= plan.id %>">Ver resumen</a>
+  </div>
+
+  <div class="recipe-banner">
+    <% plan.recipeNames.forEach((name) => { %>
+      <span><%= name %></span>
+    <% }) %>
+  </div>
+
+  <section class="shopping-list">
+    <% plan.shoppingItems.forEach((item, index) => { %>
+      <form class="shopping-item <%= item.bought ? 'done' : '' %>" method="post" action="/plan-chef/<%= plan.id %>/comprar/<%= index %>">
+        <button class="shopping-check" type="submit" <%= item.bought ? 'disabled' : '' %> aria-label="Marcar comprado">
+          <%= item.bought ? "✓" : "" %>
+        </button>
+        <div>
+          <strong><%= item.name %></strong>
+          <span><%= [item.quantity, item.unit].filter(Boolean).join(" ") || "Sin cantidad" %></span>
+        </div>
+      </form>
+    <% }) %>
+    <% if (!plan.shoppingItems.length) { %>
+      <div class="empty">No falta nada para este plan.</div>
+    <% } %>
+  </section>
+</section>
+
+<%- include("../partials/page-end") %>

@@ -5,15 +5,19 @@ const path = require("path");
 const { analyzeRecipeImage } = require("./services/recipeVision");
 const {
   addPantryItems,
+  buildChefPlanPreview,
   createRecipe,
+  createChefPlan,
   createRecipesBatch,
   deleteRecipe,
   deletePantryItem,
   eatRecipe,
+  getChefPlan,
   getDashboard,
   getPantryItems,
   getRecipe,
   getRecipeImage,
+  markChefPlanItemBought,
   recommendFromPantry,
   recommendByIngredients,
   parseRecipeBatch,
@@ -47,6 +51,75 @@ app.get("/", async (req, res, next) => {
   try {
     const dashboard = await getDashboard();
     res.render("dashboard", { title: "Cocina", dashboard });
+  } catch (error) {
+    next(error);
+  }
+});
+
+app.get("/plan-chef", async (req, res, next) => {
+  try {
+    const recipes = await searchRecipes(req.query.q || "");
+    const selectedIds = []
+      .concat(req.query.recetas || [])
+      .map((item) => Number.parseInt(item, 10))
+      .filter((item) => Number.isFinite(item) && item > 0);
+    const preview = selectedIds.length ? await buildChefPlanPreview(selectedIds) : null;
+
+    res.render("chef-plan/index", {
+      title: "Plan del chef",
+      recipes,
+      query: req.query.q || "",
+      selectedIds,
+      preview
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+app.post("/plan-chef", async (req, res, next) => {
+  try {
+    const planId = await createChefPlan(req.body.recipes);
+    redirectWithMessage(res, `/plan-chef/${planId}`, "flash", "Plan listo");
+  } catch (error) {
+    redirectWithMessage(res, "/plan-chef", "error", error.message);
+  }
+});
+
+app.get("/plan-chef/:id", async (req, res, next) => {
+  try {
+    const plan = await getChefPlan(req.params.id);
+
+    if (!plan) {
+      redirectWithMessage(res, "/plan-chef", "error", "Plan no encontrado");
+      return;
+    }
+
+    res.render("chef-plan/show", { title: "Plan del chef", plan });
+  } catch (error) {
+    next(error);
+  }
+});
+
+app.get("/plan-chef/:id/super", async (req, res, next) => {
+  try {
+    const plan = await getChefPlan(req.params.id);
+
+    if (!plan) {
+      redirectWithMessage(res, "/plan-chef", "error", "Plan no encontrado");
+      return;
+    }
+
+    res.render("chef-plan/shop", { title: "Supermercado", plan });
+  } catch (error) {
+    next(error);
+  }
+});
+
+app.post("/plan-chef/:id/comprar/:index", async (req, res, next) => {
+  try {
+    await markChefPlanItemBought(req.params.id, req.params.index);
+    redirectWithMessage(res, `/plan-chef/${req.params.id}/super`, "flash", "Agregado a despensa");
   } catch (error) {
     next(error);
   }

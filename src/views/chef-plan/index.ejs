@@ -1,0 +1,83 @@
+<%- include("../partials/page-start") %>
+
+<section class="page-title">
+  <div>
+    <p class="eyebrow">Plan del chef</p>
+    <h1>Elige recetas y arma tu compra</h1>
+  </div>
+  <a class="button" href="/despensa">Ver despensa</a>
+</section>
+
+<form class="toolbar" method="get" action="/plan-chef">
+  <input type="search" name="q" value="<%= query %>" placeholder="Buscar recetas para planear">
+  <% selectedIds.forEach((id) => { %>
+    <input type="hidden" name="recetas" value="<%= id %>">
+  <% }) %>
+  <button class="button" type="submit">Buscar</button>
+</form>
+
+<form method="get" action="/plan-chef">
+  <input type="hidden" name="q" value="<%= query %>">
+  <section class="plan-picker">
+    <% if (!recipes.length) { %>
+      <div class="empty">No hay recetas para seleccionar todavia.</div>
+    <% } %>
+    <% recipes.forEach((recipe) => { %>
+      <label class="plan-recipe">
+        <input type="checkbox" name="recetas" value="<%= recipe.id %>" <%= selectedIds.includes(recipe.id) ? 'checked' : '' %>>
+        <img src="/recetas/<%= recipe.id %>/imagen" alt="<%= recipe.title %>">
+        <span>
+          <strong><%= recipe.title %></strong>
+          <small><%= recipe.ingredient_summary || "Sin ingredientes" %></small>
+        </span>
+      </label>
+    <% }) %>
+  </section>
+  <div class="form-actions plan-actions">
+    <button class="button" type="submit">Ver lista</button>
+  </div>
+</form>
+
+<% if (preview) { %>
+  <section class="plan-preview">
+    <div class="section-head">
+      <div>
+        <p class="eyebrow">Revision</p>
+        <h2><%= preview.recipeNames.length %> recetas seleccionadas</h2>
+      </div>
+      <form method="post" action="/plan-chef">
+        <% selectedIds.forEach((id) => { %>
+          <input type="hidden" name="recipes" value="<%= id %>">
+        <% }) %>
+        <button class="button primary" type="submit">Crear plan</button>
+      </form>
+    </div>
+
+    <div class="plan-summary-grid">
+      <article>
+        <h3>Recetas</h3>
+        <p><%= preview.recipeNames.join(", ") %></p>
+      </article>
+      <article>
+        <h3>Ya hay</h3>
+        <ul>
+          <% preview.pantryItems.forEach((item) => { %>
+            <li><%= [item.name, item.quantity, item.unit].filter(Boolean).join(" ") %></li>
+          <% }) %>
+          <% if (!preview.pantryItems.length) { %><li>Nada de esta lista todavia.</li><% } %>
+        </ul>
+      </article>
+      <article>
+        <h3>Comprar</h3>
+        <ul>
+          <% preview.shoppingItems.forEach((item) => { %>
+            <li><%= [item.name, item.quantity, item.unit].filter(Boolean).join(" ") %></li>
+          <% }) %>
+          <% if (!preview.shoppingItems.length) { %><li>No falta nada.</li><% } %>
+        </ul>
+      </article>
+    </div>
+  </section>
+<% } %>
+
+<%- include("../partials/page-end") %>
