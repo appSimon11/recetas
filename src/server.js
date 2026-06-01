@@ -291,7 +291,7 @@ app.get("/recetas/:id/imagen", async (req, res, next) => {
     }
 
     res.set("Content-Type", image.image_mime);
-    res.set("Cache-Control", "public, max-age=3600");
+    res.set("Cache-Control", "no-store");
     res.send(image.image_data);
   } catch (error) {
     next(error);

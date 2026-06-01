@@ -2,7 +2,7 @@
 
 <section class="recipe-show">
   <div class="show-media">
-    <img src="/recetas/<%= recipe.id %>/imagen" alt="<%= recipe.title %>">
+    <img src="/recetas/<%= recipe.id %>/imagen?v=<%= new Date(recipe.updated_at || Date.now()).getTime() %>" alt="<%= recipe.title %>">
   </div>
 
   <article class="show-body">

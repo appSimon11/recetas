@@ -475,6 +475,7 @@ function recipeSelectQuery(where = "") {
       recipes.servings,
       recipes.mood,
       recipes.created_at,
+      recipes.updated_at,
       GROUP_CONCAT(DISTINCT recipe_ingredients.name ORDER BY recipe_ingredients.name SEPARATOR ', ') AS ingredient_summary,
       GROUP_CONCAT(DISTINCT recipe_tags.tag ORDER BY recipe_tags.tag SEPARATOR ', ') AS tag_summary
     FROM recipes
@@ -491,7 +492,8 @@ function recipeSelectQuery(where = "") {
       recipes.prep_minutes,
       recipes.servings,
       recipes.mood,
-      recipes.created_at
+      recipes.created_at,
+      recipes.updated_at
     ORDER BY recipes.created_at DESC
     LIMIT 120
   `;

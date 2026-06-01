@@ -11,7 +11,7 @@
   </div>
   <div class="hero-plate">
     <% if (dashboard.recent.length) { %>
-      <img src="/recetas/<%= dashboard.recent[0].id %>/imagen" alt="<%= dashboard.recent[0].title %>">
+      <img src="/recetas/<%= dashboard.recent[0].id %>/imagen?v=<%= new Date(dashboard.recent[0].updated_at || Date.now()).getTime() %>" alt="<%= dashboard.recent[0].title %>">
       <span><%= dashboard.recent[0].title %></span>
     <% } else { %>
       <img src="/recetas/0/imagen" alt="Plato">
@@ -49,7 +49,7 @@
   <% } %>
   <% dashboard.recent.forEach((recipe) => { %>
     <a class="recipe-card" href="/recetas/<%= recipe.id %>">
-      <img src="/recetas/<%= recipe.id %>/imagen" alt="<%= recipe.title %>">
+      <img src="/recetas/<%= recipe.id %>/imagen?v=<%= new Date(recipe.updated_at || Date.now()).getTime() %>" alt="<%= recipe.title %>">
       <div>
         <span><%= recipe.category || recipe.cuisine || "Receta" %></span>
         <h3><%= recipe.title %></h3>

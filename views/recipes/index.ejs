@@ -22,7 +22,7 @@
   <% } %>
   <% recipes.forEach((recipe) => { %>
     <a class="recipe-card" href="/recetas/<%= recipe.id %>">
-      <img src="/recetas/<%= recipe.id %>/imagen" alt="<%= recipe.title %>">
+      <img src="/recetas/<%= recipe.id %>/imagen?v=<%= new Date(recipe.updated_at || Date.now()).getTime() %>" alt="<%= recipe.title %>">
       <div>
         <span><%= recipe.prep_minutes %> min · <%= recipe.difficulty %></span>
         <h3><%= recipe.title %></h3>

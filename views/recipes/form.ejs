@@ -10,11 +10,11 @@
 
 <section class="recipe-form-layout">
   <div class="capture-panel">
-    <img id="previewImage" class="preview-image <%= recipe.id ? 'visible' : '' %>" src="<%= recipe.id ? `/recetas/${recipe.id}/imagen` : '' %>" alt="Foto de receta">
+    <img id="previewImage" class="preview-image <%= recipe.id ? 'visible' : '' %>" src="<%= recipe.id ? `/recetas/${recipe.id}/imagen?v=${new Date(recipe.updated_at || Date.now()).getTime()}` : '' %>" alt="Foto de receta">
     <% if (!recipe.id) { %>
       <label class="button file-button">
         Foto o captura
-        <input id="photoInput" type="file" accept="image/*" capture="environment">
+        <input id="photoInput" type="file" accept="image/*">
       </label>
       <button class="button primary" id="analyzeImage" type="button" disabled>Leer foto</button>
       <span id="analysisStatus"></span>
@@ -23,9 +23,10 @@
         <input id="photoDataUrl" type="hidden" name="image_data_url" required>
         <label class="button file-button">
           Cambiar foto
-          <input id="photoUploadInput" type="file" accept="image/*" capture="environment">
+          <input id="photoUploadInput" type="file" accept="image/*">
         </label>
         <button id="photoUploadSubmit" class="button primary photo-submit" type="submit" disabled>Guardar foto</button>
+        <span id="photoUploadStatus"></span>
       </form>
     <% } %>
   </div>
